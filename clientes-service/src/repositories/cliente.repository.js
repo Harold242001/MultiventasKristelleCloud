@@ -1,4 +1,4 @@
-const pool = require('../../config/db');
+const pool = require('../config/db');
 
 class ClienteRepository {
   async findAll() {
@@ -15,6 +15,19 @@ class ClienteRepository {
       [entidad.id, entidad.nombre, entidad.dni, entidad.telefono, entidad.email]
     );
     return entidad;
+  }
+
+  async update(id, data) {
+    await pool.query(
+      'UPDATE clientes SET nombre = ?, dni = ?, telefono = ?, email = ? WHERE id = ?',
+      [data.nombre, data.dni, data.telefono, data.email, id]
+    );
+    return { id, ...data };
+  }
+
+  async remove(id) {
+    await pool.query('DELETE FROM clientes WHERE id = ?', [id]);
+    return true;
   }
 }
 module.exports = new ClienteRepository();

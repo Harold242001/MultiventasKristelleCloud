@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  clientes-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multiventas-clientes-independiente
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=database
+      - DB_USER=multiventas_user
+      - DB_PASSWORD=multiventas_pass
+      - DB_NAME=multiventas_db
+    networks:
+      - multiventas-network
+    restart: unless-stopped
+
+networks:
+  multiventas-network:
+    external: true
+    name: multiventas-network

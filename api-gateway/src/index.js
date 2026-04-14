@@ -128,5 +128,5 @@ app.listen(PORT, () => {
   console.log(`\n🚀 [API GATEWAY] Multiventas Krisstelle corriendo en puerto ${PORT}`);
   console.log(`   → ventas-service    : ${VENTAS_SERVICE_URL}`);
   console.log(`   → inventario-service: ${INVENTARIO_SERVICE_URL}`);
-  console.log(`   → creditos-service  : ${CREDITOS_SERVICE_URL}\n`);
+  console.log(`   → clientes-service  : ${CLIENTES_SERVICE_URL}\n`);
 });

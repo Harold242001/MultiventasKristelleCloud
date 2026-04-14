@@ -1,11 +1,6 @@
 const productoRepository = require('../repositories/producto.repository');
 const ProductoDTO = require('../models/dto/producto.dto');
-const { v4: uuidv4 } = require('uuid');
 
-/**
- * Capa de Lógica de Negocio. 
- * Equivale a los @Service en Spring Boot.
- */
 class ProductoService {
   async obtenerTodos() {
     return await productoRepository.findAll();
@@ -19,21 +14,19 @@ class ProductoService {
 
   async crearProducto(datosPost) {
     const dto = new ProductoDTO(datosPost);
-    
-    if (!dto.esValido()) {
-      throw new Error('Datos inválidos para crear el producto. Revisar nombre y precio.');
-    }
+    if (!dto.esValido()) throw new Error('Datos de producto inválidos');
+    const entidad = { id: 'prod-' + Math.random().toString(36).substr(2, 5), ...dto };
+    return await productoRepository.save(entidad);
+  }
 
-    // Creando la "Entidad" antes de guardar
-    const productoEntity = {
-      id: uuidv4(),
-      nombre: dto.nombre,
-      categoria: dto.categoria,
-      precioUnitario: dto.precioUnitario,
-      stock: dto.stock
-    };
+  async actualizarProducto(id, datos) {
+    await this.obtenerPorId(id);
+    return await productoRepository.update(id, datos);
+  }
 
-    return await productoRepository.save(productoEntity);
+  async borrarProducto(id) {
+    await this.obtenerPorId(id);
+    return await productoRepository.remove(id);
   }
 }
 

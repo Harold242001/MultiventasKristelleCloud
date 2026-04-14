@@ -1,4 +1,4 @@
-const pool = require('../../config/db');
+const pool = require('../config/db');
 
 /**
  * Patrón Repository: Se encarga ÚNICAMENTE de hablar con la base de datos (Ejecutar SQL)
@@ -17,10 +17,23 @@ class ProductoRepository {
 
   async save(productoEntity) {
     await pool.query(
-      'INSERT INTO productos (id, nombre, categoria, precioUnitario, stock) VALUES (?, ?, ?, ?, ?)',
-      [productoEntity.id, productoEntity.nombre, productoEntity.categoria, productoEntity.precioUnitario, productoEntity.stock]
+      'INSERT INTO productos (id, nombre, categoria, precioUnitario, stock, unidadMedida) VALUES (?, ?, ?, ?, ?, ?)',
+      [productoEntity.id, productoEntity.nombre, productoEntity.categoria, productoEntity.precioUnitario, productoEntity.stock, productoEntity.unidadMedida]
     );
     return productoEntity;
+  }
+
+  async update(id, data) {
+    await pool.query(
+      'UPDATE productos SET nombre = ?, categoria = ?, precioUnitario = ?, stock = ? WHERE id = ?',
+      [data.nombre, data.categoria, data.precioUnitario, data.stock, id]
+    );
+    return { id, ...data };
+  }
+
+  async remove(id) {
+    await pool.query('DELETE FROM productos WHERE id = ?', [id]);
+    return true;
   }
 }
 

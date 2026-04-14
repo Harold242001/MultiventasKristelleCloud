@@ -1,18 +1,12 @@
 const productoService = require('../services/producto.service');
 
-/**
- * Capa Controladora. Maneja las peticiones HTTP (req, res).
- * Equivale a @RestController en Spring Boot.
- */
 class ProductoController {
-  
   async obtenerProductos(req, res) {
     try {
       const productos = await productoService.obtenerTodos();
       res.json({ total: productos.length, productos });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Error inteno del servidor al obtener productos' });
+      res.status(500).json({ error: 'Error interno' });
     }
   }
 
@@ -28,13 +22,26 @@ class ProductoController {
   async registrarProducto(req, res) {
     try {
       const productoNuevo = await productoService.crearProducto(req.body);
-      res.status(201).json({ 
-        mensaje: 'Producto creado exitosamente', 
-        producto: productoNuevo 
-      });
+      res.status(201).json(productoNuevo);
     } catch (error) {
-      // Manejo del error lanzado por el Servicio (Ej. validación DTO fallida)
       res.status(400).json({ error: error.message });
+    }
+  }
+
+  async actualizar(req, res) {
+    try {
+      const editado = await productoService.actualizarProducto(req.params.id, req.body);
+      res.json(editado);
+    } catch (e) { res.status(400).json({ error: e.message }); }
+  }
+
+  async eliminar(req, res) {
+    try {
+      await productoService.borrarProducto(req.params.id);
+      res.status(200).json({ mensaje: 'Producto eliminado con éxito', id: req.params.id });
+    } catch (e) { 
+      console.error(e);
+      res.status(500).json({ error: e.message }); 
     }
   }
 }

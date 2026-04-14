@@ -3,114 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📱 Multiventas Krisstelle — App</title>
-    <!-- React via CDN (Simulación de React App) -->
+    <title>Multiventas Cloud — Sistema de Gestión</title>
+    
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel para compilar JSX en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Tailwind CSS (Simulación de estilos modernos) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; min-height: 100vh; }
+        h1, h2, h3, .font-outfit { font-family: 'Outfit', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .btn-hover:active { transform: scale(0.96); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // ─────────────────────────────────────────────
-        // COMPONENTES REACT
-        // ─────────────────────────────────────────────
-        const API_URL = 'http://localhost:3000'; // Apuntando al API Gateway
+        const API_URL = 'http://localhost:3000';
 
         const App = () => {
-            const [vistaActual, setVistaActual] = React.useState('productos');
+            const [vista, setVista] = React.useState('ventas');
+            const [alerta, setAlerta] = React.useState({ msg: '', tipo: '' });
+
+            const notify = (msg, tipo = 'success') => {
+                setAlerta({ msg, tipo });
+                setTimeout(() => setAlerta({ msg: '', tipo: '' }), 3000);
+            };
 
             return (
-                <div className="min-h-screen">
-                    <nav className="bg-blue-800 p-4 text-white shadow-lg">
-                        <div className="container mx-auto flex justify-between items-center">
-                            <h1 className="text-2xl font-bold font-mono">🏪 Multiventas Krisstelle</h1>
-                            <div className="space-x-4">
-                                <button onClick={() => setVistaActual('productos')} className={`px-3 py-1 rounded ${vistaActual === 'productos' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Estantes (Inventario)</button>
-                                <button onClick={() => setVistaActual('ventas')} className={`px-3 py-1 rounded ${vistaActual === 'ventas' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Caja (Ventas)</button>
-                                <button onClick={() => setVistaActual('clientes')} className={`px-3 py-1 rounded ${vistaActual === 'clientes' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Directorio (Clientes)</button>
+                <div className="pb-10">
+                    {/* Header */}
+                    <header className="bg-slate-900 border-b-4 border-blue-500 shadow-xl sticky top-0 z-50">
+                        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl bg-white/10 p-2 rounded-xl">🏚️</span>
+                                <h1 className="text-2xl font-black font-outfit text-white tracking-tight">
+                                    Multiventas <span className="text-blue-400 font-normal">Krisstelle</span>
+                                </h1>
                             </div>
+                            <nav className="flex space-x-1 bg-slate-800 p-1.5 rounded-2xl">
+                                <button onClick={()=>setVista('productos')} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${vista==='productos' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>📦 Inventario</button>
+                                <button onClick={()=>setVista('clientes')} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${vista==='clientes' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>👥 Clientes</button>
+                                <button onClick={()=>setVista('ventas')} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${vista==='ventas' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>💰 Caja / Venta</button>
+                            </nav>
                         </div>
-                    </nav>
-                    
-                    <main className="container mx-auto mt-8 p-4">
-                        {vistaActual === 'productos' && <ModuloInventario />}
-                        {vistaActual === 'ventas' && <ModuloVentas />}
-                        {vistaActual === 'clientes' && <ModuloClientes />}
+                    </header>
+
+                    {/* Alerta Global */}
+                    {alerta.msg && (
+                        <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-2xl text-white font-bold shadow-2xl animate-in z-[100] ${alerta.tipo === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                            {alerta.msg}
+                        </div>
+                    )}
+
+                    <main className="max-w-6xl mx-auto mt-8 px-6">
+                        {vista === 'productos' && <ModuloProductos notify={notify} />}
+                        {vista === 'clientes' && <ModuloClientes notify={notify} />}
+                        {vista === 'ventas' && <ModuloVentas notify={notify} />}
                     </main>
                 </div>
             );
         };
 
-        const ModuloInventario = () => {
-            const [productos, setProductos] = React.useState([]);
+        // --- MÓDULO PRODUCTOS ---
+        const ModuloProductos = ({ notify }) => {
+            const [lista, setLista] = React.useState([]);
+            const [form, setForm] = React.useState({ nombre: '', precio: '', stock: '' });
 
-            React.useEffect(() => {
-                fetch(`${API_URL}/inventario/productos`)
-                    .then(r => r.json())
-                    .then(data => setProductos(data.productos || []))
-                    .catch(err => console.error("Error cargando inventario:", err));
-            }, []);
+            const fetchItems = () => fetch(`${API_URL}/inventario/productos`).then(r=>r.json()).then(d=>setLista(d.productos || []));
+            React.useEffect(() => { fetchItems(); }, []);
+
+            const add = (e) => {
+                e.preventDefault();
+                fetch(`${API_URL}/inventario/productos`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nombre: form.nombre, precioUnitario: form.precio, stock: form.stock, categoria: 'Varios' })
+                }).then(() => { setForm({nombre:'', precio:'', stock:''}); fetchItems(); notify('Producto Registrado'); });
+            };
+
+            const del = (id) => {
+                if(confirm('¿Seguro?')) {
+                    fetch(`${API_URL}/inventario/productos/${id}`, { method: 'DELETE' }).then(() => { fetchItems(); notify('Eliminado'); });
+                }
+            };
 
             return (
-                <div className="bg-white p-6 rounded shadow">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">📦 Inventario de Productos</h2>
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-100 border-b border-gray-200">
-                                <th className="p-3">Nombre</th>
-                                <th className="p-3">Categoría</th>
-                                <th className="p-3">Stock</th>
-                                <th className="p-3">Precio Unitario</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {productos.map(p => (
-                                <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                    <td className="p-3 font-medium text-gray-800">{p.nombre}</td>
-                                    <td className="p-3 text-gray-600">{p.categoria}</td>
-                                    <td className="p-3"><span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">{p.stock}</span></td>
-                                    <td className="p-3">S/ {Number(p.precioUnitario).toFixed(2)}</td>
-                                </tr>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in">
+                    <div className="bg-white p-8 rounded-3xl card-shadow h-fit">
+                        <h2 className="text-xl font-bold mb-6 text-slate-800">Cargar Inventario</h2>
+                        <form onSubmit={add} className="space-y-4">
+                            <input required value={form.nombre} onChange={e=>setForm({...form, nombre:e.target.value})} placeholder="Nombre..." className="w-full p-4 border rounded-2xl bg-slate-50 focus:ring-2 focus:ring-blue-400" />
+                            <div className="flex gap-4">
+                                <input required type="number" step="0.1" value={form.precio} onChange={e=>setForm({...form, precio:e.target.value})} placeholder="S/" className="w-full p-4 border rounded-2xl bg-slate-50" />
+                                <input required type="number" value={form.stock} onChange={e=>setForm({...form, stock:e.target.value})} placeholder="Stock" className="w-full p-4 border rounded-2xl bg-slate-50" />
+                            </div>
+                            <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black hover:bg-blue-600 transition btn-hover">REGISTRAR PRODUCTO</button>
+                        </form>
+                    </div>
+                    <div className="md:col-span-2 bg-white rounded-3xl overflow-hidden card-shadow">
+                        <div className="p-6 bg-slate-50 border-b flex justify-between">
+                            <h3 className="font-bold">Stock Actual</h3>
+                            <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded-lg">{lista.length} Items</span>
+                        </div>
+                        <div className="divide-y overflow-x-auto">
+                            {lista.map(p => (
+                                <div key={p.id} className="p-5 flex justify-between items-center hover:bg-slate-50">
+                                    <div>
+                                        <p className="font-bold text-slate-800">{p.nombre}</p>
+                                        <p className="text-xs text-slate-400 font-mono">ID: {p.id}</p>
+                                    </div>
+                                    <div className="flex items-center gap-6">
+                                        <div className="text-right">
+                                            <p className="font-bold text-lg">S/ {p.precioUnitario}</p>
+                                            <p className={`text-[10px] font-bold uppercase ${p.stock < 10 ? 'text-red-500':'text-green-500'}`}>{p.stock} Unidades</p>
+                                        </div>
+                                        <button onClick={()=>del(p.id)} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition">🗑️</button>
+                                    </div>
+                                </div>
                             ))}
-                            {productos.length === 0 && <tr><td colSpan="4" className="p-4 text-center text-gray-500">No hay productos / Cargando...</td></tr>}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             );
         };
 
-        const ModuloVentas = () => {
-            const [ventas, setVentas] = React.useState([]);
+        // --- MÓDULO CLIENTES ---
+        const ModuloClientes = ({ notify }) => {
+            const [lista, setLista] = React.useState([]);
+            const [form, setForm] = React.useState({ nombre: '', dni: '' });
 
-            React.useEffect(() => {
-                fetch(`${API_URL}/ventas`)
-                    .then(r => r.json())
-                    .then(data => setVentas(data.ventas || []))
-                    .catch(err => console.error("Error cargando ventas:", err));
-            }, []);
+            const fetchItems = () => fetch(`${API_URL}/clientes`).then(r=>r.json()).then(d=>setLista(d.clientes || []));
+            React.useEffect(() => { fetchItems(); }, []);
+
+            const add = (e) => {
+                e.preventDefault();
+                fetch(`${API_URL}/clientes`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nombre: form.nombre, dni: form.dni })
+                }).then(() => { setForm({nombre:'', dni:''}); fetchItems(); notify('Cliente Afiliado'); });
+            };
+
+            const del = (id) => {
+                if(confirm('¿Borrar cliente?')) {
+                    fetch(`${API_URL}/clientes/${id}`, { method: 'DELETE' }).then(() => { fetchItems(); notify('Cliente retirado'); });
+                }
+            };
 
             return (
-                <div className="bg-white p-6 rounded shadow">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">🛒 Movimientos de Caja (Dashboard)</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {ventas.map(v => (
-                            <div key={v.id} className="border border-gray-200 p-4 rounded bg-gray-50 flex justify-between">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in">
+                    <div className="bg-white p-8 rounded-3xl card-shadow h-fit">
+                        <h2 className="text-xl font-bold mb-6 text-slate-800">Afiliar Cliente</h2>
+                        <form onSubmit={add} className="space-y-4">
+                            <input required value={form.nombre} onChange={e=>setForm({...form, nombre:e.target.value})} placeholder="Nombre completo..." className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-blue-400" />
+                            <input required value={form.dni} onChange={e=>setForm({...form, dni:e.target.value})} placeholder="DNI..." className="w-full p-4 border rounded-2xl bg-slate-50 outline-none" />
+                            <button className="w-full bg-blue-600 text-white p-4 rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-200">GUARDAR CLIENTE</button>
+                        </form>
+                    </div>
+                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {lista.map(c => (
+                            <div key={c.id} className="bg-white p-6 rounded-3xl card-shadow border-l-[6px] border-blue-500 hover:scale-[1.02] transition flex justify-between items-center group">
                                 <div>
-                                    <p className="font-bold">{v.cliente}</p>
-                                    <p className="text-sm text-gray-500">{new Date(v.fecha).toLocaleString()}</p>
+                                    <h4 className="font-black text-slate-800 text-lg">{c.nombre}</h4>
+                                    <p className="text-xs font-bold text-slate-400 mt-1 uppercase">DNI: {c.dni}</p>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xl font-bold text-blue-600">S/ {Number(v.total).toFixed(2)}</p>
-                                    <p className="text-xs text-green-600 uppercase font-semibold">{v.estado}</p>
-                                </div>
+                                <button onClick={()=>del(c.id)} className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">✕</button>
                             </div>
                         ))}
                     </div>
@@ -118,34 +179,74 @@
             );
         };
 
-        const ModuloClientes = () => {
-            const [clientes, setClientes] = React.useState([]);
+        // --- MÓDULO CAJA / VENTAS ---
+        const ModuloVentas = ({ notify }) => {
+            const [ventas, setVentas] = React.useState([]);
+            const [cliSelection, setCliSelection] = React.useState([]);
+            const [prodSelection, setProdSelection] = React.useState([]);
+            const [data, setData] = React.useState({ cid: '', pid: '', qty: 1 });
 
-            React.useEffect(() => {
-                fetch(`${API_URL}/clientes`)
-                    .then(r => r.json())
-                    .then(data => setClientes(data.clientes || []))
-                    .catch(err => console.error("Error cargando clientes:", err));
-            }, []);
+            const reload = () => {
+                fetch(`${API_URL}/ventas`).then(r=>r.json()).then(d=>setVentas(d.ventas || []));
+                fetch(`${API_URL}/clientes`).then(r=>r.json()).then(d=>setCliSelection(d.clientes || []));
+                fetch(`${API_URL}/inventario/productos`).then(r=>r.json()).then(d=>setProdSelection(d.productos || []));
+            };
+            React.useEffect(() => { reload(); }, []);
+
+            const cobrar = (e) => {
+                e.preventDefault();
+                notify('Orquestando servicios...', 'success');
+                fetch(`${API_URL}/ventas`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ cliente_id: data.cid, productos: [{ producto_id: data.pid, cantidad: Number(data.qty) }] })
+                }).then(r => r.ok ? (reload(), notify('¡Venta Exitosa!')) : notify('Error en transacción', 'error'));
+            };
 
             return (
-                <div className="bg-white p-6 rounded shadow">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">👥 Directorio de Clientes</h2>
-                    <ul className="space-y-3">
-                        {clientes.map(c => (
-                            <li key={c.id} className="border border-blue-100 p-4 rounded flex justify-between items-center hover:bg-blue-50 transition">
-                                <div>
-                                    <p className="font-bold text-gray-800">{c.nombre}</p>
-                                    <p className="text-sm text-gray-600">DNI: {c.dni || 'N/A'}</p>
+                <div className="space-y-8 animate-in">
+                    {/* Formulario Orquestador */}
+                    <div className="bg-white p-10 rounded-[3rem] card-shadow border border-slate-200">
+                        <h2 className="text-2xl font-black text-center mb-8 text-slate-800">Orquestador de Transacción</h2>
+                        <form onSubmit={cobrar} className="flex flex-col md:flex-row gap-6 items-end">
+                            <div className="flex-1 w-full text-left">
+                                <label className="text-[10px] uppercase font-black text-slate-400 ml-2">Cliente Comprador</label>
+                                <select required value={data.cid} onChange={e=>setData({...data, cid:e.target.value})} className="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl font-semibold outline-none focus:ring-2 focus:ring-blue-400">
+                                    <option value="">-- Elige un cliente --</option>
+                                    {cliSelection.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex-1 w-full text-left">
+                                <label className="text-[10px] uppercase font-black text-slate-400 ml-2">Seleccionar Producto</label>
+                                <select required value={data.pid} onChange={e=>setData({...data, pid:e.target.value})} className="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl font-semibold outline-none focus:ring-2 focus:ring-blue-400">
+                                    <option value="">-- Elige un producto --</option>
+                                    {prodSelection.map(p=><option key={p.id} value={p.id}>{p.nombre} (S/ {p.precioUnitario})</option>)}
+                                </select>
+                            </div>
+                            <div className="w-full md:w-32 text-left">
+                                <label className="text-[10px] uppercase font-black text-slate-400 ml-2">Cant.</label>
+                                <input type="number" min="1" value={data.qty} onChange={e=>setData({...data, qty:e.target.value})} className="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl font-black text-center outline-none focus:ring-2 focus:ring-blue-400" />
+                            </div>
+                            <button className="w-full md:w-auto bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 shadow-xl transition btn-hover">FINALIZAR COBRO</button>
+                        </form>
+                    </div>
+
+                    {/* Historial Visual */}
+                    <div>
+                        <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-6 ml-2">📡 Transacciones en Tiempo Real</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {ventas.map((v, idx) => (
+                                <div key={v.id} className="bg-white p-7 rounded-[2rem] card-shadow border-t-8 border-blue-500 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-3 text-slate-100 font-bold group-hover:text-blue-50 text-4xl select-none">#{idx+1}</div>
+                                    <p className="font-black text-slate-800 text-xl leading-tight relative z-10">{v.cliente}</p>
+                                    <div className="flex justify-between items-end mt-4 relative z-10">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(v.fecha).toLocaleTimeString()}</p>
+                                        <p className="text-2xl font-black text-blue-600">S/ {Number(v.total).toFixed(2)}</p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm text-gray-600 font-medium">✉️ {c.email || 'N/A'}</p>
-                                    <p className="text-sm text-gray-600 font-medium">📞 {c.telefono || 'N/A'}</p>
-                                </div>
-                            </li>
-                        ))}
-                        {clientes.length === 0 && <p className="text-gray-500">No hay clientes...</p>}
-                    </ul>
+                            ))}
+                            {ventas.length === 0 && <p className="col-span-full text-center text-slate-400 italic py-12">No hay ventas registradas aún.</p>}
+                        </div>
+                    </div>
                 </div>
             );
         };
