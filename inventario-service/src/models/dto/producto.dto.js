@@ -7,6 +7,7 @@ class ProductoDTO {
       this.categoria = data.categoria || 'General';
       this.precioUnitario = parseFloat(data.precioUnitario);
       this.stock = parseInt(data.stock) || 0;
+      this.unidadMedida = data.unidadMedida || 'unidad';
     }
   
     esValido() {

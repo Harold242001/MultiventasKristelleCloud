@@ -3,175 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiventas Cloud — Sistema de Gestión</title>
+    <title>Multiventas Krisstelle — Cloud Enterprise</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', sans-serif; background: #f1f5f9; min-height: 100vh; }
         h1, h2, h3, .font-outfit { font-family: 'Outfit', sans-serif; }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        .btn-hover:active { transform: scale(0.96); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+        .tab-btn { transition: all 0.2s; font-weight: 700; font-size: 0.75rem; color: #94a3b8; }
+        .tab-btn.active { color: white; background: #4f46e5; border-radius: 0.5rem; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const API_URL = 'http://localhost:3000';
+        const API_BASE = 'http://localhost:3000';
 
         const App = () => {
             const [vista, setVista] = React.useState('ventas');
-            const [alerta, setAlerta] = React.useState({ msg: '', tipo: '' });
+            const [toast, setToast] = React.useState('');
 
-            const notify = (msg, tipo = 'success') => {
-                setAlerta({ msg, tipo });
-                setTimeout(() => setAlerta({ msg: '', tipo: '' }), 3000);
+            const showToast = (msg) => {
+                setToast(msg);
+                setTimeout(() => setToast(''), 3000);
             };
 
             return (
                 <div className="pb-10">
-                    {/* Header */}
-                    <header className="bg-slate-900 border-b-4 border-blue-500 shadow-xl sticky top-0 z-50">
-                        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <nav className="bg-slate-900 border-b-4 border-indigo-600 px-6 py-4 shadow-xl">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-3">
-                                <span className="text-3xl bg-white/10 p-2 rounded-xl">🏚️</span>
-                                <h1 className="text-2xl font-black font-outfit text-white tracking-tight">
-                                    Multiventas <span className="text-blue-400 font-normal">Krisstelle</span>
-                                </h1>
+                                <img src="logo.png" alt="Logo" className="h-8 w-auto" />
+                                <h1 className="text-white font-black tracking-tight uppercase">Multiventas <span className="text-indigo-400 font-normal">Cloud</span></h1>
                             </div>
-                            <nav className="flex space-x-1 bg-slate-800 p-1.5 rounded-2xl">
-                                <button onClick={()=>setVista('productos')} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${vista==='productos' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>📦 Inventario</button>
-                                <button onClick={()=>setVista('clientes')} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${vista==='clientes' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>👥 Clientes</button>
-                                <button onClick={()=>setVista('ventas')} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${vista==='ventas' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>💰 Caja / Venta</button>
-                            </nav>
+                            <div className="flex gap-1 bg-slate-800 p-1 rounded-lg">
+                                <button onClick={() => setVista('almacen')} className={`px-4 py-2 ${vista === 'almacen' ? 'bg-indigo-600 text-white rounded-md' : 'text-slate-400'}`}>📦 Almacén</button>
+                                <button onClick={() => setVista('clientes')} className={`px-4 py-2 ${vista === 'clientes' ? 'bg-indigo-600 text-white rounded-md' : 'text-slate-400'}`}>👥 Clientes</button>
+                                <button onClick={() => setVista('ventas')} className={`px-4 py-2 ${vista === 'ventas' ? 'bg-indigo-600 text-white rounded-md' : 'text-slate-400'}`}>🛒 Caja</button>
+                            </div>
                         </div>
-                    </header>
+                    </nav>
 
-                    {/* Alerta Global */}
-                    {alerta.msg && (
-                        <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-2xl text-white font-bold shadow-2xl animate-in z-[100] ${alerta.tipo === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
-                            {alerta.msg}
+                    {toast && (
+                        <div className="fixed top-20 right-5 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-2xl border-l-4 border-indigo-500 z-50">
+                            {toast}
                         </div>
                     )}
 
-                    <main className="max-w-6xl mx-auto mt-8 px-6">
-                        {vista === 'productos' && <ModuloProductos notify={notify} />}
-                        {vista === 'clientes' && <ModuloClientes notify={notify} />}
-                        {vista === 'ventas' && <ModuloVentas notify={notify} />}
+                    <main className="max-w-7xl mx-auto mt-8 px-6">
+                        {vista === 'almacen' && <ModuloAlmacen onMsg={showToast} />}
+                        {vista === 'clientes' && <ModuloClientes onMsg={showToast} />}
+                        {vista === 'ventas' && <ModuloCaja onMsg={showToast} />}
                     </main>
                 </div>
             );
         };
 
-        // --- MÓDULO PRODUCTOS ---
-        const ModuloProductos = ({ notify }) => {
-            const [lista, setLista] = React.useState([]);
-            const [form, setForm] = React.useState({ nombre: '', precio: '', stock: '' });
+        // --- COMPONENTE ALMACÉN ---
+        const ModuloAlmacen = ({ onMsg }) => {
+            const [articulos, setArticulos] = React.useState([]);
+            const [form, setForm] = React.useState({ n: '', p: '', s: '', c: 'Víveres', u: 'unidad' });
 
-            const fetchItems = () => fetch(`${API_URL}/inventario/productos`).then(r=>r.json()).then(d=>setLista(d.productos || []));
-            React.useEffect(() => { fetchItems(); }, []);
-
-            const add = (e) => {
-                e.preventDefault();
-                fetch(`${API_URL}/inventario/productos`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nombre: form.nombre, precioUnitario: form.precio, stock: form.stock, categoria: 'Varios' })
-                }).then(() => { setForm({nombre:'', precio:'', stock:''}); fetchItems(); notify('Producto Registrado'); });
+            const cargar = () => {
+                fetch(`${API_BASE}/inventario/productos`)
+                    .then(r => r.json())
+                    .then(d => setArticulos(d.productos || []))
+                    .catch(e => console.error(e));
             };
 
-            const del = (id) => {
+            React.useEffect(() => { cargar(); }, []);
+
+            const enviar = (e) => {
+                e.preventDefault();
+                fetch(`${API_BASE}/inventario/productos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: form.n, precioUnitario: form.p, stock: form.s, categoria: form.c, unidadMedida: form.u })
+                }).then(() => {
+                    setForm({ n:'', p:'', s:'', c:'Víveres', u:'unidad' });
+                    cargar();
+                    onMsg('✅ Producto guardado');
+                });
+            };
+
+            const borrar = (id) => {
                 if(confirm('¿Seguro?')) {
-                    fetch(`${API_URL}/inventario/productos/${id}`, { method: 'DELETE' }).then(() => { fetchItems(); notify('Eliminado'); });
+                    fetch(`${API_BASE}/inventario/productos/${id}`, { method: 'DELETE' })
+                        .then(() => { cargar(); onMsg('🗑️ Eliminado'); });
                 }
             };
 
             return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in">
-                    <div className="bg-white p-8 rounded-3xl card-shadow h-fit">
-                        <h2 className="text-xl font-bold mb-6 text-slate-800">Cargar Inventario</h2>
-                        <form onSubmit={add} className="space-y-4">
-                            <input required value={form.nombre} onChange={e=>setForm({...form, nombre:e.target.value})} placeholder="Nombre..." className="w-full p-4 border rounded-2xl bg-slate-50 focus:ring-2 focus:ring-blue-400" />
-                            <div className="flex gap-4">
-                                <input required type="number" step="0.1" value={form.precio} onChange={e=>setForm({...form, precio:e.target.value})} placeholder="S/" className="w-full p-4 border rounded-2xl bg-slate-50" />
-                                <input required type="number" value={form.stock} onChange={e=>setForm({...form, stock:e.target.value})} placeholder="Stock" className="w-full p-4 border rounded-2xl bg-slate-50" />
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border h-fit">
+                        <h2 className="font-bold mb-4">➕ Registrar</h2>
+                        <form onSubmit={enviar} className="space-y-3">
+                            <input required value={form.n} onChange={e=>setForm({...form, n:e.target.value})} placeholder="Nombre..." className="w-full p-2 border rounded-md text-sm" />
+                            <div className="flex gap-2">
+                                <input required type="number" step="0.1" value={form.p} onChange={e=>setForm({...form, p:e.target.value})} placeholder="Precio" className="w-full p-2 border rounded-md text-sm" />
+                                <input required type="number" value={form.s} onChange={e=>setForm({...form, s:e.target.value})} placeholder="Stock" className="w-full p-2 border rounded-md text-sm" />
                             </div>
-                            <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black hover:bg-blue-600 transition btn-hover">REGISTRAR PRODUCTO</button>
+                            <select value={form.c} onChange={e=>setForm({...form, c:e.target.value})} className="w-full p-2 border rounded-md text-sm">
+                                <option>Víveres</option><option>Lácteos</option><option>Limpieza</option>
+                            </select>
+                            <button className="w-full bg-slate-900 text-white py-2 rounded-md font-bold">GUARDAR</button>
                         </form>
                     </div>
-                    <div className="md:col-span-2 bg-white rounded-3xl overflow-hidden card-shadow">
-                        <div className="p-6 bg-slate-50 border-b flex justify-between">
-                            <h3 className="font-bold">Stock Actual</h3>
-                            <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded-lg">{lista.length} Items</span>
-                        </div>
-                        <div className="divide-y overflow-x-auto">
-                            {lista.map(p => (
-                                <div key={p.id} className="p-5 flex justify-between items-center hover:bg-slate-50">
-                                    <div>
-                                        <p className="font-bold text-slate-800">{p.nombre}</p>
-                                        <p className="text-xs text-slate-400 font-mono">ID: {p.id}</p>
-                                    </div>
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-right">
-                                            <p className="font-bold text-lg">S/ {p.precioUnitario}</p>
-                                            <p className={`text-[10px] font-bold uppercase ${p.stock < 10 ? 'text-red-500':'text-green-500'}`}>{p.stock} Unidades</p>
-                                        </div>
-                                        <button onClick={()=>del(p.id)} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition">🗑️</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="lg:col-span-3 bg-white rounded-2xl border overflow-hidden shadow-sm">
+                        <table className="w-full text-sm">
+                            <thead className="bg-slate-50 border-b">
+                                <tr>
+                                    <th className="p-3 text-left">Producto</th>
+                                    <th className="p-3 text-center">Stock</th>
+                                    <th className="p-3 text-right">Precio</th>
+                                    <th className="p-3 text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {articulos.map(a => (
+                                    <tr key={a.id} className="hover:bg-slate-50 transition">
+                                        <td className="p-3">
+                                            <p className="font-bold">{a.nombre}</p>
+                                            <span className="text-[10px] text-blue-500 font-bold uppercase">{a.categoria}</span>
+                                        </td>
+                                        <td className="p-3 text-center font-bold">{a.stock} <span className="text-slate-400 font-normal">{a.unidadMedida}</span></td>
+                                        <td className="p-3 text-right font-black">S/ {a.precioUnitario}</td>
+                                        <td className="p-3 text-center">
+                                            <button onClick={() => borrar(a.id)} className="text-red-400 hover:text-red-600">✕</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             );
         };
 
-        // --- MÓDULO CLIENTES ---
-        const ModuloClientes = ({ notify }) => {
+        // --- COMPONENTE CLIENTES ---
+        const ModuloClientes = ({ onMsg }) => {
             const [lista, setLista] = React.useState([]);
-            const [form, setForm] = React.useState({ nombre: '', dni: '' });
+            const [form, setForm] = React.useState({ n:'', d:'', t:'', e:'' });
 
-            const fetchItems = () => fetch(`${API_URL}/clientes`).then(r=>r.json()).then(d=>setLista(d.clientes || []));
-            React.useEffect(() => { fetchItems(); }, []);
-
-            const add = (e) => {
-                e.preventDefault();
-                fetch(`${API_URL}/clientes`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nombre: form.nombre, dni: form.dni })
-                }).then(() => { setForm({nombre:'', dni:''}); fetchItems(); notify('Cliente Afiliado'); });
+            const refresh = () => {
+                fetch(`${API_BASE}/clientes`)
+                    .then(r => r.json())
+                    .then(d => setLista(d.clientes || []))
+                    .catch(e => console.error(e));
             };
 
-            const del = (id) => {
-                if(confirm('¿Borrar cliente?')) {
-                    fetch(`${API_URL}/clientes/${id}`, { method: 'DELETE' }).then(() => { fetchItems(); notify('Cliente retirado'); });
+            React.useEffect(() => { refresh(); }, []);
+
+            const guardar = (e) => {
+                e.preventDefault();
+                fetch(`${API_BASE}/clientes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: form.n, dni: form.d, telefono: form.t, email: form.e })
+                }).then(() => {
+                    setForm({ n:'', d:'', t:'', e:'' });
+                    refresh();
+                    onMsg('✅ Cliente afiliado');
+                });
+            };
+
+            const quitar = (id) => {
+                if(confirm('¿Quitar cliente?')) {
+                    fetch(`${API_BASE}/clientes/${id}`, { method: 'DELETE' })
+                        .then(() => { refresh(); onMsg('🗑️ Cliente eliminado'); });
                 }
             };
 
             return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in">
-                    <div className="bg-white p-8 rounded-3xl card-shadow h-fit">
-                        <h2 className="text-xl font-bold mb-6 text-slate-800">Afiliar Cliente</h2>
-                        <form onSubmit={add} className="space-y-4">
-                            <input required value={form.nombre} onChange={e=>setForm({...form, nombre:e.target.value})} placeholder="Nombre completo..." className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-blue-400" />
-                            <input required value={form.dni} onChange={e=>setForm({...form, dni:e.target.value})} placeholder="DNI..." className="w-full p-4 border rounded-2xl bg-slate-50 outline-none" />
-                            <button className="w-full bg-blue-600 text-white p-4 rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-200">GUARDAR CLIENTE</button>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="bg-white p-6 rounded-2xl border h-fit">
+                        <h2 className="font-bold mb-4">＋ Nuevo Cliente</h2>
+                        <form onSubmit={guardar} className="space-y-3">
+                            <input required value={form.n} onChange={e=>setForm({...form, n:e.target.value})} placeholder="Nombre real..." className="w-full p-2 border rounded-md text-sm" />
+                            <input required value={form.d} onChange={e=>setForm({...form, d:e.target.value})} placeholder="DNI..." className="w-full p-2 border rounded-md text-sm" />
+                            <input value={form.t} onChange={e=>setForm({...form, t:e.target.value})} placeholder="Teléfono..." className="w-full p-2 border rounded-md text-sm" />
+                            <input value={form.e} onChange={e=>setForm({...form, e:e.target.value})} placeholder="Email..." className="w-full p-2 border rounded-md text-sm" />
+                            <button className="w-full bg-indigo-600 text-white py-2 rounded-md font-bold">FEGISTRAR</button>
                         </form>
                     </div>
-                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {lista.map(c => (
-                            <div key={c.id} className="bg-white p-6 rounded-3xl card-shadow border-l-[6px] border-blue-500 hover:scale-[1.02] transition flex justify-between items-center group">
+                            <div key={c.id} className="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm flex justify-between items-center group">
                                 <div>
-                                    <h4 className="font-black text-slate-800 text-lg">{c.nombre}</h4>
-                                    <p className="text-xs font-bold text-slate-400 mt-1 uppercase">DNI: {c.dni}</p>
+                                    <p className="font-bold text-slate-800">{c.nombre}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold">DNI: {c.dni} • Telf: {c.telefono || '-'}</p>
                                 </div>
-                                <button onClick={()=>del(c.id)} className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">✕</button>
+                                <button onClick={() => quitar(c.id)} className="text-red-300 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition">✕</button>
                             </div>
                         ))}
                     </div>
@@ -179,73 +206,67 @@
             );
         };
 
-        // --- MÓDULO CAJA / VENTAS ---
-        const ModuloVentas = ({ notify }) => {
+        // --- COMPONENTE CAJA ---
+        const ModuloCaja = ({ onMsg }) => {
             const [ventas, setVentas] = React.useState([]);
-            const [cliSelection, setCliSelection] = React.useState([]);
-            const [prodSelection, setProdSelection] = React.useState([]);
-            const [data, setData] = React.useState({ cid: '', pid: '', qty: 1 });
+            const [clis, setClis] = React.useState([]);
+            const [prods, setProds] = React.useState([]);
+            const [data, setData] = React.useState({ c:'', p:'', q: 1 });
 
             const reload = () => {
-                fetch(`${API_URL}/ventas`).then(r=>r.json()).then(d=>setVentas(d.ventas || []));
-                fetch(`${API_URL}/clientes`).then(r=>r.json()).then(d=>setCliSelection(d.clientes || []));
-                fetch(`${API_URL}/inventario/productos`).then(r=>r.json()).then(d=>setProdSelection(d.productos || []));
+                fetch(`${API_BASE}/ventas`).then(r=>r.json()).then(d=>setVentas(d.ventas || []));
+                fetch(`${API_BASE}/clientes`).then(r=>r.json()).then(d=>setClis(d.clientes || []));
+                fetch(`${API_BASE}/inventario/productos`).then(r=>r.json()).then(d=>setProds(d.productos || []));
             };
+
             React.useEffect(() => { reload(); }, []);
 
             const cobrar = (e) => {
                 e.preventDefault();
-                notify('Orquestando servicios...', 'success');
-                fetch(`${API_URL}/ventas`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ cliente_id: data.cid, productos: [{ producto_id: data.pid, cantidad: Number(data.qty) }] })
-                }).then(r => r.ok ? (reload(), notify('¡Venta Exitosa!')) : notify('Error en transacción', 'error'));
+                fetch(`${API_BASE}/ventas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente_id: data.c, productos: [{ producto_id: data.p, cantidad: Number(data.q) }] })
+                }).then(r => r.ok ? (reload(), onMsg('💰 Venta Exitosa')) : r.json().then(ej => onMsg('❌ ' + ej.error)));
             };
 
             return (
-                <div className="space-y-8 animate-in">
-                    {/* Formulario Orquestador */}
-                    <div className="bg-white p-10 rounded-[3rem] card-shadow border border-slate-200">
-                        <h2 className="text-2xl font-black text-center mb-8 text-slate-800">Orquestador de Transacción</h2>
-                        <form onSubmit={cobrar} className="flex flex-col md:flex-row gap-6 items-end">
+                <div className="space-y-8">
+                    <div className="bg-slate-900 p-8 rounded-3xl text-white shadow-2xl">
+                        <h2 className="text-xl font-black mb-6 text-center uppercase tracking-widest italic">Punto de Venta</h2>
+                        <form onSubmit={cobrar} className="flex flex-col md:flex-row gap-4 items-end">
                             <div className="flex-1 w-full text-left">
-                                <label className="text-[10px] uppercase font-black text-slate-400 ml-2">Cliente Comprador</label>
-                                <select required value={data.cid} onChange={e=>setData({...data, cid:e.target.value})} className="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl font-semibold outline-none focus:ring-2 focus:ring-blue-400">
-                                    <option value="">-- Elige un cliente --</option>
-                                    {cliSelection.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Cliente</label>
+                                <select required value={data.c} onChange={e=>setData({...data, c:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-bold text-sm outline-none">
+                                    <option value="">-- Seleccionar --</option>
+                                    {clis.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                                 </select>
                             </div>
                             <div className="flex-1 w-full text-left">
-                                <label className="text-[10px] uppercase font-black text-slate-400 ml-2">Seleccionar Producto</label>
-                                <select required value={data.pid} onChange={e=>setData({...data, pid:e.target.value})} className="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl font-semibold outline-none focus:ring-2 focus:ring-blue-400">
-                                    <option value="">-- Elige un producto --</option>
-                                    {prodSelection.map(p=><option key={p.id} value={p.id}>{p.nombre} (S/ {p.precioUnitario})</option>)}
+                                <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Producto</label>
+                                <select required value={data.p} onChange={e=>setData({...data, p:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-bold text-sm outline-none">
+                                    <option value="">-- Seleccionar --</option>
+                                    {prods.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                                 </select>
                             </div>
-                            <div className="w-full md:w-32 text-left">
-                                <label className="text-[10px] uppercase font-black text-slate-400 ml-2">Cant.</label>
-                                <input type="number" min="1" value={data.qty} onChange={e=>setData({...data, qty:e.target.value})} className="w-full mt-1 p-4 bg-slate-100 border-none rounded-2xl font-black text-center outline-none focus:ring-2 focus:ring-blue-400" />
+                            <div className="w-full md:w-20 text-left">
+                                <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Cant.</label>
+                                <input required type="number" min="1" value={data.q} onChange={e=>setData({...data, q:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-black text-center" />
                             </div>
-                            <button className="w-full md:w-auto bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 shadow-xl transition btn-hover">FINALIZAR COBRO</button>
+                            <button className="bg-indigo-600 px-8 py-2 rounded-md font-black hover:bg-white hover:text-indigo-900 transition-all">COBRAR</button>
                         </form>
                     </div>
-
-                    {/* Historial Visual */}
-                    <div>
-                        <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-6 ml-2">📡 Transacciones en Tiempo Real</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {ventas.map((v, idx) => (
-                                <div key={v.id} className="bg-white p-7 rounded-[2rem] card-shadow border-t-8 border-blue-500 relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 p-3 text-slate-100 font-bold group-hover:text-blue-50 text-4xl select-none">#{idx+1}</div>
-                                    <p className="font-black text-slate-800 text-xl leading-tight relative z-10">{v.cliente}</p>
-                                    <div className="flex justify-between items-end mt-4 relative z-10">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(v.fecha).toLocaleTimeString()}</p>
-                                        <p className="text-2xl font-black text-blue-600">S/ {Number(v.total).toFixed(2)}</p>
-                                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {ventas.map((v, i) => (
+                            <div key={v.id} className="bg-white p-5 rounded-2xl border shadow-sm border-t-8 border-slate-900">
+                                <p className="text-[8px] font-black text-indigo-500">BOLETA #{i+1}</p>
+                                <h4 className="font-bold text-slate-800 h-10 overflow-hidden">{v.cliente}</h4>
+                                <div className="mt-4 flex justify-between items-end border-t pt-2">
+                                    <span className="text-[9px] font-bold text-slate-300">{new Date(v.fecha).toLocaleTimeString()}</span>
+                                    <span className="text-xl font-black">S/ {v.total}</span>
                                 </div>
-                            ))}
-                            {ventas.length === 0 && <p className="col-span-full text-center text-slate-400 italic py-12">No hay ventas registradas aún.</p>}
-                        </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
