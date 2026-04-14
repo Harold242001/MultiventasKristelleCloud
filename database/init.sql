@@ -31,25 +31,22 @@ CREATE TABLE IF NOT EXISTS ventas_detalle (
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE
 );
 
--- Tabla de Créditos
-CREATE TABLE IF NOT EXISTS creditos (
+-- Tabla de Clientes
+CREATE TABLE IF NOT EXISTS clientes (
     id VARCHAR(36) PRIMARY KEY,
-    cliente VARCHAR(100) NOT NULL,
-    dni VARCHAR(20),
+    nombre VARCHAR(100) NOT NULL,
+    dni VARCHAR(20) UNIQUE,
     telefono VARCHAR(20),
-    descripcion TEXT,
-    monto DECIMAL(10, 2) NOT NULL,
-    saldoPendiente DECIMAL(10, 2) NOT NULL,
-    estado VARCHAR(20) DEFAULT 'pendiente',
-    fechaCredito DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fechaVencimiento DATETIME NULL
+    email VARCHAR(100),
+    fechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insertar algunos datos de prueba iniciales
 INSERT INTO productos (id, nombre, categoria, precioUnitario, stock, unidad) VALUES 
-(UUID(), 'Arroz x 5kg', 'Granos', 12.50, 100, 'bolsa'),
-(UUID(), 'Aceite 1L', 'Aceites', 8.00, 50, 'botella'),
-(UUID(), 'Azúcar 2kg', 'Endulzantes', 5.50, 75, 'bolsa');
+('prod-1', 'Arroz Costeño 1kg', 'Víveres', 4.50, 100, 'bolsa'),
+('prod-2', 'Aceite 1L', 'Aceites', 8.00, 50, 'botella'),
+('prod-3', 'Azúcar 2kg', 'Endulzantes', 5.50, 75, 'bolsa');
 
-INSERT INTO creditos (id, cliente, dni, telefono, monto, saldoPendiente, estado) VALUES
-(UUID(), 'Rosa Mamani', '12345678', '987654321', 85.00, 85.00, 'pendiente');
+INSERT INTO clientes (id, nombre, dni, telefono, email) VALUES
+('cli-100', 'Rosa Mamani', '12345678', '987654321', 'rosa@mail.com'),
+('cli-101', 'Juan Pérez', '87654321', '912345678', 'juan@mail.com');

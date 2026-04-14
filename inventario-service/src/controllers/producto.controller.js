@@ -16,6 +16,15 @@ class ProductoController {
     }
   }
 
+  async obtenerProductoPorId(req, res) {
+    try {
+      const producto = await productoService.obtenerPorId(req.params.id);
+      res.json(producto);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+
   async registrarProducto(req, res) {
     try {
       const productoNuevo = await productoService.crearProducto(req.body);

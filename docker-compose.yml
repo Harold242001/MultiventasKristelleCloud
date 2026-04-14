@@ -53,11 +53,11 @@ services:
       - PORT=3000
       - VENTAS_SERVICE_URL=http://ventas-service:3000
       - INVENTARIO_SERVICE_URL=http://inventario-service:3000
-      - CREDITOS_SERVICE_URL=http://creditos-service:3000
+      - CLIENTES_SERVICE_URL=http://clientes-service:3000
     depends_on:
       - ventas-service
       - inventario-service
-      - creditos-service
+      - clientes-service
     networks:
       - multiventas-network
     restart: unless-stopped
@@ -109,13 +109,13 @@ services:
     restart: unless-stopped
 
   # ─────────────────────────────────────────────
-  # CREDITOS SERVICE
+  # CLIENTES SERVICE
   # ─────────────────────────────────────────────
-  creditos-service:
+  clientes-service:
     build:
-      context: ./creditos-service
+      context: ./clientes-service
       dockerfile: Dockerfile
-    container_name: multiventas-creditos
+    container_name: multiventas-clientes
     ports:
       - "3003:3000"
     environment:

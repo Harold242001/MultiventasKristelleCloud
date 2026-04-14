@@ -35,7 +35,7 @@
                             <div className="space-x-4">
                                 <button onClick={() => setVistaActual('productos')} className={`px-3 py-1 rounded ${vistaActual === 'productos' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Estantes (Inventario)</button>
                                 <button onClick={() => setVistaActual('ventas')} className={`px-3 py-1 rounded ${vistaActual === 'ventas' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Caja (Ventas)</button>
-                                <button onClick={() => setVistaActual('creditos')} className={`px-3 py-1 rounded ${vistaActual === 'creditos' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Cuaderno (Créditos)</button>
+                                <button onClick={() => setVistaActual('clientes')} className={`px-3 py-1 rounded ${vistaActual === 'clientes' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}>Directorio (Clientes)</button>
                             </div>
                         </div>
                     </nav>
@@ -43,7 +43,7 @@
                     <main className="container mx-auto mt-8 p-4">
                         {vistaActual === 'productos' && <ModuloInventario />}
                         {vistaActual === 'ventas' && <ModuloVentas />}
-                        {vistaActual === 'creditos' && <ModuloCreditos />}
+                        {vistaActual === 'clientes' && <ModuloClientes />}
                     </main>
                 </div>
             );
@@ -118,32 +118,33 @@
             );
         };
 
-        const ModuloCreditos = () => {
-            const [creditos, setCreditos] = React.useState([]);
+        const ModuloClientes = () => {
+            const [clientes, setClientes] = React.useState([]);
 
             React.useEffect(() => {
-                fetch(`${API_URL}/creditos`)
+                fetch(`${API_URL}/clientes`)
                     .then(r => r.json())
-                    .then(data => setCreditos(data.creditos || []))
-                    .catch(err => console.error("Error cargando créditos:", err));
+                    .then(data => setClientes(data.clientes || []))
+                    .catch(err => console.error("Error cargando clientes:", err));
             }, []);
 
             return (
                 <div className="bg-white p-6 rounded shadow">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">📒 Cuaderno de Cuentas por Cobrar</h2>
+                    <h2 className="text-xl font-semibold mb-4 text-gray-700">👥 Directorio de Clientes</h2>
                     <ul className="space-y-3">
-                        {creditos.map(c => (
-                            <li key={c.id} className="border border-red-100 p-4 rounded flex justify-between items-center hover:bg-red-50 transition">
+                        {clientes.map(c => (
+                            <li key={c.id} className="border border-blue-100 p-4 rounded flex justify-between items-center hover:bg-blue-50 transition">
                                 <div>
-                                    <p className="font-bold text-gray-800">{c.cliente}</p>
-                                    <p className="text-sm text-gray-600">Tel: {c.telefono || 'N/A'}</p>
+                                    <p className="font-bold text-gray-800">{c.nombre}</p>
+                                    <p className="text-sm text-gray-600">DNI: {c.dni || 'N/A'}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-lg font-bold text-red-600">Deuda: S/ {Number(c.saldoPendiente).toFixed(2)}</p>
-                                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">{c.estado}</span>
+                                    <p className="text-sm text-gray-600 font-medium">✉️ {c.email || 'N/A'}</p>
+                                    <p className="text-sm text-gray-600 font-medium">📞 {c.telefono || 'N/A'}</p>
                                 </div>
                             </li>
                         ))}
+                        {clientes.length === 0 && <p className="text-gray-500">No hay clientes...</p>}
                     </ul>
                 </div>
             );

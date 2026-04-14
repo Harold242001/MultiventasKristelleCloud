@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3000;
 // ─────────────────────────────────────────────
 const VENTAS_SERVICE_URL      = process.env.VENTAS_SERVICE_URL      || 'http://ventas-service:3000';
 const INVENTARIO_SERVICE_URL  = process.env.INVENTARIO_SERVICE_URL  || 'http://inventario-service:3000';
-const CREDITOS_SERVICE_URL    = process.env.CREDITOS_SERVICE_URL    || 'http://creditos-service:3000';
+const CLIENTES_SERVICE_URL    = process.env.CLIENTES_SERVICE_URL    || 'http://clientes-service:3000';
 
 // ─────────────────────────────────────────────
 // Middlewares globales
@@ -37,7 +37,7 @@ app.get('/health', (req, res) => {
     routes: {
       ventas:     `${VENTAS_SERVICE_URL}`,
       inventario: `${INVENTARIO_SERVICE_URL}`,
-      creditos:   `${CREDITOS_SERVICE_URL}`,
+      clientes:   `${CLIENTES_SERVICE_URL}`,
     },
   });
 });
@@ -78,17 +78,17 @@ app.use(
 );
 
 // ─────────────────────────────────────────────
-// Proxy: /creditos  →  creditos-service
+// Proxy: /clientes  →  clientes-service
 // ─────────────────────────────────────────────
 app.use(
-  '/creditos',
+  '/clientes',
   createProxyMiddleware({
-    target: CREDITOS_SERVICE_URL,
+    target: CLIENTES_SERVICE_URL,
     changeOrigin: true,
     on: {
       error: (err, req, res) => {
-        console.error(`[GATEWAY] Error al conectar con creditos-service: ${err.message}`);
-        res.status(502).json({ error: 'creditos-service no disponible', detalle: err.message });
+        console.error(`[GATEWAY] Error al conectar con clientes-service: ${err.message}`);
+        res.status(502).json({ error: 'clientes-service no disponible', detalle: err.message });
       },
     },
   })
@@ -108,8 +108,8 @@ app.get('/', (req, res) => {
       'POST /ventas',
       'GET  /inventario/productos',
       'POST /inventario/productos',
-      'GET  /creditos',
-      'POST /creditos',
+      'GET  /clientes',
+      'POST /clientes',
     ],
   });
 });

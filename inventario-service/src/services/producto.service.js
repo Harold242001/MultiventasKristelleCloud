@@ -11,6 +11,12 @@ class ProductoService {
     return await productoRepository.findAll();
   }
 
+  async obtenerPorId(id) {
+    const producto = await productoRepository.findById(id);
+    if (!producto) throw new Error('Producto no encontrado');
+    return producto;
+  }
+
   async crearProducto(datosPost) {
     const dto = new ProductoDTO(datosPost);
     

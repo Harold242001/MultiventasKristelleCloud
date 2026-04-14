@@ -10,6 +10,11 @@ class ProductoRepository {
     return rows;
   }
 
+  async findById(id) {
+    const [rows] = await pool.query('SELECT * FROM productos WHERE id = ?', [id]);
+    return rows[0]; // Retorna el primer producto encontrado o undefined
+  }
+
   async save(productoEntity) {
     await pool.query(
       'INSERT INTO productos (id, nombre, categoria, precioUnitario, stock) VALUES (?, ?, ?, ?, ?)',

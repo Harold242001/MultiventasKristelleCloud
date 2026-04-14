@@ -1,11 +1,11 @@
 class VentaDTO {
   constructor(data) {
-    this.cliente = data.cliente;
-    this.total = parseFloat(data.total);
+    this.cliente_id = data.cliente_id;
+    this.productos = data.productos; // Array de objetos { producto_id: "...", cantidad: 2 }
   }
 
   esValido() {
-    return this.cliente && !isNaN(this.total) && this.total > 0;
+    return this.cliente_id && Array.isArray(this.productos) && this.productos.length > 0;
   }
 }
 
