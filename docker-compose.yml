@@ -1,0 +1,137 @@
+# ═══════════════════════════════════════════════════════════════════
+# docker-compose.yml — Multiventas Krisstelle
+# Sistema de Bodega en Microservicios
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────────
+  # BASE DE DATOS MÚLTIPLES — Simulación de Aurora (MySQL)
+  # ─────────────────────────────────────────────
+  database:
+    image: mysql:8.0
+    container_name: multiventas-database
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=multiventas_db
+      - MYSQL_USER=multiventas_user
+      - MYSQL_PASSWORD=multiventas_pass
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - multiventas-network
+    restart: always
+
+  # ─────────────────────────────────────────────
+  # FRONTEND BÁSICO — Simulación S3 / React
+  # ─────────────────────────────────────────────
+  frontend:
+    image: nginx:alpine
+    container_name: multiventas-frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    depends_on:
+      - api-gateway
+    networks:
+      - multiventas-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # API GATEWAY
+  # ─────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: multiventas-api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - VENTAS_SERVICE_URL=http://ventas-service:3000
+      - INVENTARIO_SERVICE_URL=http://inventario-service:3000
+      - CREDITOS_SERVICE_URL=http://creditos-service:3000
+    depends_on:
+      - ventas-service
+      - inventario-service
+      - creditos-service
+    networks:
+      - multiventas-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # VENTAS SERVICE
+  # ─────────────────────────────────────────────
+  ventas-service:
+    build:
+      context: ./ventas-service
+      dockerfile: Dockerfile
+    container_name: multiventas-ventas
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=database
+      - DB_USER=multiventas_user
+      - DB_PASSWORD=multiventas_pass
+      - DB_NAME=multiventas_db
+    depends_on:
+      - database
+    networks:
+      - multiventas-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # INVENTARIO SERVICE
+  # ─────────────────────────────────────────────
+  inventario-service:
+    build:
+      context: ./inventario-service
+      dockerfile: Dockerfile
+    container_name: multiventas-inventario
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=database
+      - DB_USER=multiventas_user
+      - DB_PASSWORD=multiventas_pass
+      - DB_NAME=multiventas_db
+    depends_on:
+      - database
+    networks:
+      - multiventas-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # CREDITOS SERVICE
+  # ─────────────────────────────────────────────
+  creditos-service:
+    build:
+      context: ./creditos-service
+      dockerfile: Dockerfile
+    container_name: multiventas-creditos
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=database
+      - DB_USER=multiventas_user
+      - DB_PASSWORD=multiventas_pass
+      - DB_NAME=multiventas_db
+    depends_on:
+      - database
+    networks:
+      - multiventas-network
+    restart: unless-stopped
+
+networks:
+  multiventas-network:
+    driver: bridge
+    name: multiventas-network

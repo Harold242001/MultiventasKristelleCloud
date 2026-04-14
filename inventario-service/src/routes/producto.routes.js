@@ -1,0 +1,9 @@
+const express = require('express');
+const router = express.Router();
+const productoController = require('../controllers/producto.controller');
+
+// Definición de las rutas REST (Equivale a @GetMapping, @PostMapping)
+router.get('/', (req, res) => productoController.obtenerProductos(req, res));
+router.post('/', (req, res) => productoController.registrarProducto(req, res));
+
+module.exports = router;
