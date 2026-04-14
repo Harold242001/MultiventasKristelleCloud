@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiventas Krisstelle — Cloud Enterprise</title>
+    <title>Multiventas Krisstelle — ERP Pro</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -14,8 +14,8 @@
     <style>
         body { font-family: 'Inter', sans-serif; background: #f1f5f9; min-height: 100vh; }
         h1, h2, h3, .font-outfit { font-family: 'Outfit', sans-serif; }
-        .tab-btn { transition: all 0.2s; font-weight: 700; font-size: 0.75rem; color: #94a3b8; }
-        .tab-btn.active { color: white; background: #4f46e5; border-radius: 0.5rem; }
+        .glass-card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        input:focus, select:focus { ring: 2px; ring-color: #6366f1; outline: none; border-color: #6366f1; }
     </style>
 </head>
 <body>
@@ -26,11 +26,11 @@
 
         const App = () => {
             const [vista, setVista] = React.useState('ventas');
-            const [toast, setToast] = React.useState('');
+            const [alerta, setAlerta] = React.useState(null);
 
-            const showToast = (msg) => {
-                setToast(msg);
-                setTimeout(() => setToast(''), 3000);
+            const notify = (msg, status = 'success') => {
+                setAlerta({ msg, status });
+                setTimeout(() => setAlerta(null), 3000);
             };
 
             return (
@@ -39,230 +39,239 @@
                         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-3">
                                 <img src="logo.png" alt="Logo" className="h-8 w-auto" />
-                                <h1 className="text-white font-black tracking-tight uppercase">Multiventas <span className="text-indigo-400 font-normal">Cloud</span></h1>
+                                <h1 className="text-white font-black tracking-tight uppercase">Multiventas <span className="text-indigo-400 font-normal">Cloud ERP</span></h1>
                             </div>
                             <div className="flex gap-1 bg-slate-800 p-1 rounded-lg">
-                                <button onClick={() => setVista('almacen')} className={`px-4 py-2 ${vista === 'almacen' ? 'bg-indigo-600 text-white rounded-md' : 'text-slate-400'}`}>📦 Almacén</button>
-                                <button onClick={() => setVista('clientes')} className={`px-4 py-2 ${vista === 'clientes' ? 'bg-indigo-600 text-white rounded-md' : 'text-slate-400'}`}>👥 Clientes</button>
-                                <button onClick={() => setVista('ventas')} className={`px-4 py-2 ${vista === 'ventas' ? 'bg-indigo-600 text-white rounded-md' : 'text-slate-400'}`}>🛒 Caja</button>
+                                <button onClick={() => setVista('almacen')} className={`px-4 py-2 text-xs font-bold rounded-lg ${vista === 'almacen' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}>📦 Almacén</button>
+                                <button onClick={() => setVista('clientes')} className={`px-4 py-2 text-xs font-bold rounded-lg ${vista === 'clientes' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}>👥 Clientes</button>
+                                <button onClick={() => setVista('ventas')} className={`px-4 py-2 text-xs font-bold rounded-lg ${vista === 'ventas' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}>🛒 Caja</button>
                             </div>
                         </div>
                     </nav>
 
-                    {toast && (
-                        <div className="fixed top-20 right-5 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-2xl border-l-4 border-indigo-500 z-50">
-                            {toast}
+                    {alerta && (
+                        <div className={`fixed top-20 right-5 px-6 py-3 rounded-xl shadow-2xl z-50 text-white font-bold border-l-4 ${alerta.status === 'success' ? 'bg-green-600 border-green-800' : 'bg-red-600 border-red-800'}`}>
+                            {alerta.msg}
                         </div>
                     )}
 
                     <main className="max-w-7xl mx-auto mt-8 px-6">
-                        {vista === 'almacen' && <ModuloAlmacen onMsg={showToast} />}
-                        {vista === 'clientes' && <ModuloClientes onMsg={showToast} />}
-                        {vista === 'ventas' && <ModuloCaja onMsg={showToast} />}
+                        {vista === 'almacen' && <ModuloProd onNotify={notify} />}
+                        {vista === 'clientes' && <ModuloCli onNotify={notify} />}
+                        {vista === 'ventas' && <ModuloVen onNotify={notify} />}
                     </main>
                 </div>
             );
         };
 
-        // --- COMPONENTE ALMACÉN ---
-        const ModuloAlmacen = ({ onMsg }) => {
-            const [articulos, setArticulos] = React.useState([]);
-            const [form, setForm] = React.useState({ n: '', p: '', s: '', c: 'Víveres', u: 'unidad' });
+        // --- MÓDULO ALMACÉN ---
+        const ModuloProd = ({ onNotify }) => {
+            const [items, setItems] = React.useState([]);
+            const [search, setSearch] = React.useState('');
+            const [editId, setEditId] = React.useState(null);
+            const [f, setF] = React.useState({ n: '', p: '', s: '', c: 'Víveres', u: 'unidad' });
 
-            const cargar = () => {
-                fetch(`${API_BASE}/inventario/productos`)
-                    .then(r => r.json())
-                    .then(d => setArticulos(d.productos || []))
-                    .catch(e => console.error(e));
-            };
+            const reload = () => fetch(`${API_BASE}/inventario/productos`).then(r=>r.json()).then(d=>setItems(d.productos || []));
+            React.useEffect(() => { reload(); }, []);
 
-            React.useEffect(() => { cargar(); }, []);
-
-            const enviar = (e) => {
+            const save = (e) => {
                 e.preventDefault();
-                fetch(`${API_BASE}/inventario/productos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre: form.n, precioUnitario: form.p, stock: form.s, categoria: form.c, unidadMedida: form.u })
+                const method = editId ? 'PUT' : 'POST';
+                const url = editId ? `${API_BASE}/inventario/productos/${editId}` : `${API_BASE}/inventario/productos`;
+                
+                fetch(url, {
+                    method, headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: f.n, precioUnitario: f.p, stock: f.s, categoria: f.c, unidadMedida: f.u })
                 }).then(() => {
-                    setForm({ n:'', p:'', s:'', c:'Víveres', u:'unidad' });
-                    cargar();
-                    onMsg('✅ Producto guardado');
+                    setF({ n:'', p:'', s:'', c:'Víveres', u:'unidad' });
+                    setEditId(null);
+                    reload();
+                    onNotify(editId ? '✅ Producto actualizado' : '✅ Producto creado');
                 });
             };
 
-            const borrar = (id) => {
-                if(confirm('¿Seguro?')) {
-                    fetch(`${API_BASE}/inventario/productos/${id}`, { method: 'DELETE' })
-                        .then(() => { cargar(); onMsg('🗑️ Eliminado'); });
-                }
+            const startEdit = (p) => {
+                setEditId(p.id);
+                setF({ n: p.nombre, p: p.precioUnitario, s: p.stock, c: p.categoria, u: p.unidadMedida });
             };
+
+            const del = (id) => { if(confirm('¿Borrar?')) fetch(`${API_BASE}/inventario/productos/${id}`, {method:'DELETE'}).then(()=>{ reload(); onNotify('🗑️ Eliminado', 'error'); }); };
+
+            const filtered = items.filter(i => i.nombre.toLowerCase().includes(search.toLowerCase()) || i.categoria.toLowerCase().includes(search.toLowerCase()));
 
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border h-fit">
-                        <h2 className="font-bold mb-4">➕ Registrar</h2>
-                        <form onSubmit={enviar} className="space-y-3">
-                            <input required value={form.n} onChange={e=>setForm({...form, n:e.target.value})} placeholder="Nombre..." className="w-full p-2 border rounded-md text-sm" />
-                            <div className="flex gap-2">
-                                <input required type="number" step="0.1" value={form.p} onChange={e=>setForm({...form, p:e.target.value})} placeholder="Precio" className="w-full p-2 border rounded-md text-sm" />
-                                <input required type="number" value={form.s} onChange={e=>setForm({...form, s:e.target.value})} placeholder="Stock" className="w-full p-2 border rounded-md text-sm" />
+                        <h2 className="font-bold mb-4">{editId ? '✏️ Editar Producto' : '➕ Nuevo Producto'}</h2>
+                        <form onSubmit={save} className="space-y-3">
+                            <input required value={f.n} onChange={e=>setF({...f, n:e.target.value})} placeholder="Nombre..." className="w-full p-2 border rounded-lg text-sm" />
+                            <div className="grid grid-cols-2 gap-2">
+                                <input required type="number" step="0.1" value={f.p} onChange={e=>setF({...f, p:e.target.value})} placeholder="Precio S/" className="w-full p-2 border rounded-lg text-sm" />
+                                <input required type="number" value={f.s} onChange={e=>setF({...f, s:e.target.value})} placeholder="Stock" className="w-full p-2 border rounded-lg text-sm" />
                             </div>
-                            <select value={form.c} onChange={e=>setForm({...form, c:e.target.value})} className="w-full p-2 border rounded-md text-sm">
-                                <option>Víveres</option><option>Lácteos</option><option>Limpieza</option>
+                            <select value={f.c} onChange={e=>setF({...f, c:e.target.value})} className="w-full p-2 border rounded-lg text-sm">
+                                <option>Víveres</option><option>Lácteos</option><option>Limpieza</option><option>Golosinas</option>
                             </select>
-                            <button className="w-full bg-slate-900 text-white py-2 rounded-md font-bold">GUARDAR</button>
+                            <div className="flex gap-2">
+                                <button type="submit" className={`flex-1 py-2 rounded-lg font-bold text-white ${editId ? 'bg-orange-500' : 'bg-slate-900'}`}>{editId ? 'ACTUALIZAR' : 'GUARDAR'}</button>
+                                {editId && <button onClick={()=>{setEditId(null); setF({n:'',p:'',s:'',c:'Víveres',u:'unidad'})}} className="p-2 bg-slate-100 rounded-lg">✕</button>}
+                            </div>
                         </form>
                     </div>
-                    <div className="lg:col-span-3 bg-white rounded-2xl border overflow-hidden shadow-sm">
-                        <table className="w-full text-sm">
-                            <thead className="bg-slate-50 border-b">
-                                <tr>
-                                    <th className="p-3 text-left">Producto</th>
-                                    <th className="p-3 text-center">Stock</th>
-                                    <th className="p-3 text-right">Precio</th>
-                                    <th className="p-3 text-center">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {articulos.map(a => (
-                                    <tr key={a.id} className="hover:bg-slate-50 transition">
-                                        <td className="p-3">
-                                            <p className="font-bold">{a.nombre}</p>
-                                            <span className="text-[10px] text-blue-500 font-bold uppercase">{a.categoria}</span>
-                                        </td>
-                                        <td className="p-3 text-center font-bold">{a.stock} <span className="text-slate-400 font-normal">{a.unidadMedida}</span></td>
-                                        <td className="p-3 text-right font-black">S/ {a.precioUnitario}</td>
-                                        <td className="p-3 text-center">
-                                            <button onClick={() => borrar(a.id)} className="text-red-400 hover:text-red-600">✕</button>
-                                        </td>
+                    <div className="lg:col-span-3 space-y-4">
+                        <div className="bg-white p-3 rounded-xl shadow-sm border flex items-center gap-3">
+                            <span className="text-slate-400 ml-2">🔍</span>
+                            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nombre o categoría..." className="w-full bg-transparent border-none outline-none text-sm" />
+                        </div>
+                        <div className="bg-white rounded-2xl border overflow-hidden shadow-sm">
+                            <table className="w-full text-sm">
+                                <thead className="bg-slate-50 border-b">
+                                    <tr>
+                                        <th className="p-4 text-left">Producto</th>
+                                        <th className="p-4 text-center">Stock</th>
+                                        <th className="p-4 text-right">Precio</th>
+                                        <th className="p-4 text-center">Gestión</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {filtered.map(p => (
+                                        <tr key={p.id} className="hover:bg-slate-50">
+                                            <td className="p-4"><p className="font-bold">{p.nombre}</p><span className="text-[10px] text-indigo-500 font-bold uppercase">{p.categoria}</span></td>
+                                            <td className="p-4 text-center font-bold">{p.stock}</td>
+                                            <td className="p-4 text-right font-black">S/ {p.precioUnitario}</td>
+                                            <td className="p-4 text-center space-x-3">
+                                                <button onClick={()=>startEdit(p)} className="text-slate-400 hover:text-indigo-600">✏️</button>
+                                                <button onClick={()=>del(p.id)} className="text-slate-300 hover:text-red-500">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        // --- COMPONENTE CLIENTES ---
-        const ModuloClientes = ({ onMsg }) => {
-            const [lista, setLista] = React.useState([]);
-            const [form, setForm] = React.useState({ n:'', d:'', t:'', e:'' });
+        // --- MÓDULO CLIENTES ---
+        const ModuloCli = ({ onNotify }) => {
+            const [clis, setClis] = React.useState([]);
+            const [search, setSearch] = React.useState('');
+            const [editId, setEditId] = React.useState(null);
+            const [f, setF] = React.useState({ n: '', d: '', t: '', e: '' });
 
-            const refresh = () => {
-                fetch(`${API_BASE}/clientes`)
-                    .then(r => r.json())
-                    .then(d => setLista(d.clientes || []))
-                    .catch(e => console.error(e));
-            };
+            const reload = () => fetch(`${API_BASE}/clientes`).then(r=>r.json()).then(d=>setClis(d.clientes || []));
+            React.useEffect(() => { reload(); }, []);
 
-            React.useEffect(() => { refresh(); }, []);
-
-            const guardar = (e) => {
+            const save = (e) => {
                 e.preventDefault();
-                fetch(`${API_BASE}/clientes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre: form.n, dni: form.d, telefono: form.t, email: form.e })
-                }).then(() => {
-                    setForm({ n:'', d:'', t:'', e:'' });
-                    refresh();
-                    onMsg('✅ Cliente afiliado');
-                });
+                const m = editId ? 'PUT' : 'POST';
+                const u = editId ? `${API_BASE}/clientes/${editId}` : `${API_BASE}/clientes`;
+                fetch(u, {
+                    method: m, headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: f.n, dni: f.d, telefono: f.t, email: f.e })
+                }).then(() => { setEditId(null); setF({n:'',d:'',t:'',e:''}); reload(); onNotify(editId ? '✏️ Datos actualizados' : '✅ Cliente afiliado'); });
             };
 
-            const quitar = (id) => {
-                if(confirm('¿Quitar cliente?')) {
-                    fetch(`${API_BASE}/clientes/${id}`, { method: 'DELETE' })
-                        .then(() => { refresh(); onMsg('🗑️ Cliente eliminado'); });
-                }
-            };
+            const startEdit = (c) => { setEditId(c.id); setF({ n: c.nombre, d: c.dni, t: c.telefono, e: c.email }); };
+            const del = (id) => { if(confirm('¿Retirar cliente?')) fetch(`${API_BASE}/clientes/${id}`, {method:'DELETE'}).then(()=> { reload(); onNotify('🗑️ Cliente eliminado', 'error'); }); };
+
+            const filtered = clis.filter(c => c.nombre.toLowerCase().includes(search.toLowerCase()) || c.dni.includes(search));
 
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-2xl border h-fit">
-                        <h2 className="font-bold mb-4">＋ Nuevo Cliente</h2>
-                        <form onSubmit={guardar} className="space-y-3">
-                            <input required value={form.n} onChange={e=>setForm({...form, n:e.target.value})} placeholder="Nombre real..." className="w-full p-2 border rounded-md text-sm" />
-                            <input required value={form.d} onChange={e=>setForm({...form, d:e.target.value})} placeholder="DNI..." className="w-full p-2 border rounded-md text-sm" />
-                            <input value={form.t} onChange={e=>setForm({...form, t:e.target.value})} placeholder="Teléfono..." className="w-full p-2 border rounded-md text-sm" />
-                            <input value={form.e} onChange={e=>setForm({...form, e:e.target.value})} placeholder="Email..." className="w-full p-2 border rounded-md text-sm" />
-                            <button className="w-full bg-indigo-600 text-white py-2 rounded-md font-bold">FEGISTRAR</button>
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border h-fit">
+                        <h2 className="font-bold mb-4">{editId ? '✏️ Editar Datos' : '👤 Nuevo Cliente'}</h2>
+                        <form onSubmit={save} className="space-y-3">
+                            <input required value={f.n} onChange={e=>setF({...f, n:e.target.value})} placeholder="Nombre..." className="w-full p-2 border rounded-lg text-sm" />
+                            <input required value={f.d} onChange={e=>setF({...f, d:e.target.value})} placeholder="DNI..." className="w-full p-2 border rounded-lg text-sm" />
+                            <input value={f.t} onChange={e=>setF({...f, t:e.target.value})} placeholder="Telf..." className="w-full p-2 border rounded-lg text-sm" />
+                            <input value={f.e} onChange={e=>setF({...f, e:e.target.value})} placeholder="Email..." className="w-full p-2 border rounded-lg text-sm" />
+                            <div className="flex gap-2">
+                                <button type="submit" className={`flex-1 py-2 rounded-lg font-bold text-white ${editId ? 'bg-indigo-500' : 'bg-indigo-600'}`}>{editId ? 'ACTUALIZAR' : 'AFILIAR'}</button>
+                                {editId && <button onClick={()=>{setEditId(null); setF({n:'',d:'',t:'',e:''})}} className="p-2 bg-slate-100 rounded-lg">✕</button>}
+                            </div>
                         </form>
                     </div>
-                    <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {lista.map(c => (
-                            <div key={c.id} className="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm flex justify-between items-center group">
-                                <div>
-                                    <p className="font-bold text-slate-800">{c.nombre}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold">DNI: {c.dni} • Telf: {c.telefono || '-'}</p>
+                    <div className="lg:col-span-3 space-y-4">
+                        <div className="bg-white p-3 rounded-xl shadow-sm border flex items-center gap-3">
+                            <span className="text-slate-400 ml-2">🔍</span>
+                            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Filtrar por nombre o DNI..." className="w-full bg-transparent border-none outline-none text-sm" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {filtered.map(c => (
+                                <div key={c.id} className="bg-white p-5 rounded-xl border shadow-sm border-l-4 border-indigo-500 flex justify-between items-center group">
+                                    <div>
+                                        <p className="font-bold text-slate-800">{c.nombre}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">DNI: {c.dni} • TEL: {c.telefono || '-'}</p>
+                                    </div>
+                                    <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-all">
+                                        <button onClick={()=>startEdit(c)} className="text-slate-400 hover:text-indigo-600">✏️</button>
+                                        <button onClick={()=>del(c.id)} className="text-red-300 hover:text-red-500 font-bold">✕</button>
+                                    </div>
                                 </div>
-                                <button onClick={() => quitar(c.id)} className="text-red-300 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition">✕</button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        // --- COMPONENTE CAJA ---
-        const ModuloCaja = ({ onMsg }) => {
+        // --- MÓDULO CAJA ---
+        const ModuloVen = ({ onNotify }) => {
             const [ventas, setVentas] = React.useState([]);
             const [clis, setClis] = React.useState([]);
             const [prods, setProds] = React.useState([]);
-            const [data, setData] = React.useState({ c:'', p:'', q: 1 });
+            const [sel, setSel] = React.useState({ c: '', p: '', q: 1 });
 
             const reload = () => {
                 fetch(`${API_BASE}/ventas`).then(r=>r.json()).then(d=>setVentas(d.ventas || []));
                 fetch(`${API_BASE}/clientes`).then(r=>r.json()).then(d=>setClis(d.clientes || []));
                 fetch(`${API_BASE}/inventario/productos`).then(r=>r.json()).then(d=>setProds(d.productos || []));
             };
-
             React.useEffect(() => { reload(); }, []);
 
-            const cobrar = (e) => {
+            const postVenta = (e) => {
                 e.preventDefault();
                 fetch(`${API_BASE}/ventas`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ cliente_id: data.c, productos: [{ producto_id: data.p, cantidad: Number(data.q) }] })
-                }).then(r => r.ok ? (reload(), onMsg('💰 Venta Exitosa')) : r.json().then(ej => onMsg('❌ ' + ej.error)));
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente_id: sel.c, productos: [{ producto_id: sel.p, cantidad: Number(sel.q) }] })
+                }).then(r => r.ok ? (reload(), onNotify('💰 Venta Realizada')) : r.json().then(ej => onNotify(ej.error, 'error')));
             };
 
             return (
-                <div className="space-y-8">
-                    <div className="bg-slate-900 p-8 rounded-3xl text-white shadow-2xl">
-                        <h2 className="text-xl font-black mb-6 text-center uppercase tracking-widest italic">Punto de Venta</h2>
-                        <form onSubmit={cobrar} className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="space-y-8 animate-in">
+                    <div className="bg-slate-900 p-8 rounded-[2rem] text-white shadow-2xl">
+                        <h2 className="text-xl font-black mb-6 text-center italic uppercase">Punto de Cobro</h2>
+                        <form onSubmit={postVenta} className="flex flex-col md:flex-row gap-6 items-end">
                             <div className="flex-1 w-full text-left">
-                                <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Cliente</label>
-                                <select required value={data.c} onChange={e=>setData({...data, c:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-bold text-sm outline-none">
-                                    <option value="">-- Seleccionar --</option>
-                                    {clis.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                <label className="text-[10px] font-bold text-indigo-400 block mb-1">Cliente</label>
+                                <select required value={sel.c} onChange={e=>setSel({...sel, c:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-bold text-sm">
+                                    <option value="">-- Buscar --</option>
+                                    {clis.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.dni})</option>)}
                                 </select>
                             </div>
                             <div className="flex-1 w-full text-left">
-                                <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Producto</label>
-                                <select required value={data.p} onChange={e=>setData({...data, p:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-bold text-sm outline-none">
-                                    <option value="">-- Seleccionar --</option>
-                                    {prods.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                                <label className="text-[10px] font-bold text-indigo-400 block mb-1">Producto</label>
+                                <select required value={sel.p} onChange={e=>setSel({...sel, p:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-bold text-sm">
+                                    <option value="">-- Buscar --</option>
+                                    {prods.map(p => <option key={p.id} value={p.id}>{p.nombre} (Stock: {p.stock})</option>)}
                                 </select>
                             </div>
-                            <div className="w-full md:w-20 text-left">
-                                <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Cant.</label>
-                                <input required type="number" min="1" value={data.q} onChange={e=>setData({...data, q:e.target.value})} className="w-full p-2 text-slate-900 border-none rounded-md font-black text-center" />
+                            <div className="w-full md:w-16 text-left">
+                                <label className="text-[10px] font-bold text-indigo-400 block mb-1">Cant.</label>
+                                <input required type="number" min="1" value={sel.q} onChange={e=>setSel({...sel, q:e.target.value})} className="w-full p-2 text-slate-900 rounded-md text-center font-black" />
                             </div>
-                            <button className="bg-indigo-600 px-8 py-2 rounded-md font-black hover:bg-white hover:text-indigo-900 transition-all">COBRAR</button>
+                            <button className="bg-indigo-600 px-10 py-2 rounded-lg font-black hover:bg-white hover:text-indigo-900 transition-all">COBRAR</button>
                         </form>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-12">
                         {ventas.map((v, i) => (
-                            <div key={v.id} className="bg-white p-5 rounded-2xl border shadow-sm border-t-8 border-slate-900">
-                                <p className="text-[8px] font-black text-indigo-500">BOLETA #{i+1}</p>
-                                <h4 className="font-bold text-slate-800 h-10 overflow-hidden">{v.cliente}</h4>
+                            <div key={v.id} className="bg-white p-5 rounded-2xl border-t-8 border-slate-900 shadow-sm">
+                                <p className="text-[8px] font-black text-indigo-500 uppercase">Boleta #{i+1}</p>
+                                <h4 className="font-bold text-slate-800 truncate">{v.cliente}</h4>
                                 <div className="mt-4 flex justify-between items-end border-t pt-2">
-                                    <span className="text-[9px] font-bold text-slate-300">{new Date(v.fecha).toLocaleTimeString()}</span>
+                                    <span className="text-[9px] font-bold text-slate-300 uppercase">{new Date(v.fecha).toLocaleTimeString()}</span>
                                     <span className="text-xl font-black">S/ {v.total}</span>
                                 </div>
                             </div>

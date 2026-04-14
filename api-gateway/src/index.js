@@ -67,7 +67,7 @@ app.use(
   createProxyMiddleware({
     target: INVENTARIO_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/inventario': '' },   // Elimina el prefijo al reenviar
+    pathRewrite: { '^/inventario': '' },   
     on: {
       error: (err, req, res) => {
         console.error(`[GATEWAY] Error al conectar con inventario-service: ${err.message}`);

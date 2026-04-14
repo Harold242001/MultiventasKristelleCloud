@@ -1,7 +1,7 @@
 class VentaDTO {
   constructor(data) {
     this.cliente_id = data.cliente_id;
-    this.productos = data.productos; // Array de objetos { producto_id: "...", cantidad: 2 }
+    this.productos = data.productos; 
   }
 
   esValido() {
